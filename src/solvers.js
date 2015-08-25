@@ -45,57 +45,69 @@ window.findNRooksSolution = function(n) {
   /* Iteration Traversal */
   for (var i = 0; i < rooksGraph.nodes.length; i++) {
 
+    debugger;
+
     var allAnswersFromThisstartingNode = [];
 
     var recursiveTraversal = function(node, placedPositions, invalidEdges) {
-      placedPositions = placedPositions || [];
-      invalidEdges = invalidEdges || [];
-      invalidEdges.concat(node.edges);
+    
 
       /* Base Case */
       if (placedPositions.length === n) {
         allAnswersFromThisstartingNode.push(placedPositions);
+        // placedPositions = [];
         return;
       }
+      placedPositions.push(node);
 
       /* If no where to go */
+      var placeToGo = false;
+      for (var k = 0; k < node.safeEdges.length; k++) {
+        if (invalidEdges[JSON.stringify(node.safeEdges[k].position)] === undefined) {
+          placeToGo = true;
+        }
+      };
+
+      if (placeToGo == false) {
+        return false;
+      };
+
+      node.edges.forEach(function(edge) {
+        if (invalidEdges.hasOwnProperty(JSON.stringify(edge.position))) {
+          /* Don't add */
+        } else {
+          invalidEdges[JSON.stringify(edge.position)] = "invalid";
+        }
+      })
       
 
       node.safeEdges.forEach(function(safeEdge) {
-        if(placedPositions.length === 0 ){
-          placedPositions.push(safeEdge);
+        var isSafe = false;
+  
+        if (invalidEdges[JSON.stringify(safeEdge.position)] === undefined) {
+          isSafe = true;
+        }
+        
+        // debugger;
+        if (isSafe) {
           /* Recurse */
           recursiveTraversal(safeEdge, placedPositions, invalidEdges);
-        } else {
-          var isSafe = true;
-          for (var i = 0; i < safeEdge.edges.length; i++) {
-            for (var i = 0; i < placedPositions.length; i++) {
-              if( (placedPositions[i].position[0] === safeEdge.edges[i].position[0]) && (placedPositions[i].position[1] === safeEdge.edges[i].position[1]) ) {
-                isSafe = false;
-              }
-            };
-          };
-          if (isSafe) {
-            placedPositions.push(safeEdge);
-            /* Recurse */
-            recursiveTraversal(safeEdge, placedPositions, invalidEdges);
-          }
         }
+        
       });
     }
 
 
-    
-    recursiveTraversal(rooksGraph.nodes[i]);
-    allAnswers.push(allAnswersFromThisstartingNode);
+    // debugger;
+    recursiveTraversal(rooksGraph.nodes[i], [], {});
+    allAnswers = allAnswers.concat(allAnswersFromThisstartingNode);
   };
 
   /* Build a board from all answers */
 
   console.log(allAnswers);
-  console.log('Single solution for ' + n + ' rooks:', JSON.stringify(solution));
-  console.log(rooksGraph);
-  return solution;
+  // console.log('Single solution for ' + n + ' rooks:', JSON.stringify(solution));
+  // return solution;
 };
 
 
