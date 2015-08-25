@@ -16,7 +16,7 @@
 window.findNRooksSolution = function(n) {
   var solution = undefined; //fixme
   var rooksGraph = new Graph();
-
+  // debugger;
   for (var row = 0; row < n; row++) {
     for (var column = 0; column < n; column++) {
       var positionNode = new Node([row, column]);
@@ -41,71 +41,111 @@ window.findNRooksSolution = function(n) {
     };
   });
 
-  var allAnswers = []
+  /* Every possible board */
+  var allAnswers = [];
+
+
+  var recursiveTraversal = function(node, placedPositions, invalidEdges) {
+      var correctBoardAtThisNode = placedPositions.slice();
+      var allInvalidEdges = {};
+      for (var key in invalidEdges) {
+        allInvalidEdges[key] = invalidEdges[key];
+      }
+      /* Base Case */
+      if (correctBoardAtThisNode.length === n) {
+        var matchingMax = 0;
+        var matchingPositions = 0;
+        for (var u = 0; u < allAnswers.length; u++) {
+          var correctBoard = allAnswers[u];
+          for (var m = 0; m < n; m++) {
+            for (var p = 0; p < n; p++) {
+              if (JSON.stringify(correctBoardAtThisNode[p].position) === JSON.stringify(correctBoard[m].position)) {
+                // debugger;
+                matchingPositions++;
+              }
+            }
+          }
+          matchingMax = matchingPositions > matchingMax ? matchingPositions : matchingMax;
+          matchingPositions = 0;
+        }
+        if (matchingMax < correctBoardAtThisNode.length) {
+          // debugger;
+          allAnswers.push(correctBoardAtThisNode);
+          return;
+          // recursiveTraversal(rooksGraph.nodes[i], [], {});
+        }
+
+        // correctBoardAtThisNode = [];
+      } else {
+        correctBoardAtThisNode.push(node);
+        /* If no where to go */
+        var placeToGo = false;
+          for (var k = 0; k < node.safeEdges.length; k++) {
+            if (allInvalidEdges[JSON.stringify(node.safeEdges[k].position)] === undefined) {
+              placeToGo = true;
+            }
+          };
+
+          if (placeToGo == false) {
+            recursiveTraversal(node, correctBoardAtThisNode, allInvalidEdges);
+          } else {
+            node.edges.forEach(function(edge) {
+              if (allInvalidEdges.hasOwnProperty(JSON.stringify(edge.position))) {
+                /* Don't add */
+              } else {
+                allInvalidEdges[JSON.stringify(edge.position)] = "invalid";
+              }
+            })
+          
+
+            node.safeEdges.forEach(function(safeEdge) {
+              var isSafe = false;
+        
+              if (allInvalidEdges[JSON.stringify(safeEdge.position)] === undefined) {
+                isSafe = true;
+              }
+              
+              // debugger;
+              if (isSafe) {
+                /* Recurse */
+                recursiveTraversal(safeEdge, correctBoardAtThisNode, allInvalidEdges);
+                
+              }
+              
+            });
+
+          }
+
+        }
+      
+    }
+
   /* Iteration Traversal */
   for (var i = 0; i < rooksGraph.nodes.length; i++) {
 
-    debugger;
+    // debugger;
 
-    var allAnswersFromThisstartingNode = [];
-
-    var recursiveTraversal = function(node, placedPositions, invalidEdges) {
     
-
-      /* Base Case */
-      if (placedPositions.length === n) {
-        allAnswersFromThisstartingNode.push(placedPositions);
-        // placedPositions = [];
-        return;
-      }
-      placedPositions.push(node);
-
-      /* If no where to go */
-      var placeToGo = false;
-      for (var k = 0; k < node.safeEdges.length; k++) {
-        if (invalidEdges[JSON.stringify(node.safeEdges[k].position)] === undefined) {
-          placeToGo = true;
-        }
-      };
-
-      if (placeToGo == false) {
-        return false;
-      };
-
-      node.edges.forEach(function(edge) {
-        if (invalidEdges.hasOwnProperty(JSON.stringify(edge.position))) {
-          /* Don't add */
-        } else {
-          invalidEdges[JSON.stringify(edge.position)] = "invalid";
-        }
-      })
-      
-
-      node.safeEdges.forEach(function(safeEdge) {
-        var isSafe = false;
-  
-        if (invalidEdges[JSON.stringify(safeEdge.position)] === undefined) {
-          isSafe = true;
-        }
-        
-        // debugger;
-        if (isSafe) {
-          /* Recurse */
-          recursiveTraversal(safeEdge, placedPositions, invalidEdges);
-        }
-        
-      });
-    }
+    
 
 
     // debugger;
     recursiveTraversal(rooksGraph.nodes[i], [], {});
-    allAnswers = allAnswers.concat(allAnswersFromThisstartingNode);
+    
   };
 
   /* Build a board from all answers */
+  var formattedAnswers = [];
+  for (var ty = 0; ty < allAnswers.length; ty++) {
+    var formattedAnswer = [];
+    var oneAnswer = allAnswers[ty];
+    for (var oi = 0; oi < oneAnswer.length; oi++) {
+      formattedAnswer.push(JSON.stringify(oneAnswer[oi].position));
+    };
+    formattedAnswers.push(formattedAnswer);
+  };
 
-  console.log(allAnswers);
+  console.log(formattedAnswers);
   // console.log('Single solution for ' + n + ' rooks:', JSON.stringify(solution));
   // return solution;
 };
@@ -124,10 +164,146 @@ window.countNRooksSolutions = function(n) {
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
 window.findNQueensSolution = function(n) {
-  var solution = undefined; //fixme
+  var queensGraph = new Graph();
+  // debugger;
+  for (var row = 0; row < n; row++) {
+    for (var column = 0; column < n; column++) {
+      var positionNode = new Node([row, column]);
+      queensGraph.nodes.push(positionNode);
+    };
+  };
 
-  console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
-  return solution;
+  queensGraph.nodes.forEach(function(node){
+    var nodeColumn = node.position[1];
+    var nodeRow = node.position[0];
+    // debugger;
+    for (var nodeIndex = 0; nodeIndex < queensGraph.nodes.length; nodeIndex++) {
+      var currentComparison = queensGraph.nodes[nodeIndex];
+      // debugger;
+      var currentCompRow = currentComparison.position[0];
+      var currentCompColumn = currentComparison.position[1];
+      /* Diagonals */
+      var nodeMajor = nodeColumn - nodeRow + n - 1;
+      var currentMajor = currentCompColumn - currentCompRow + n - 1;
+      var nodeMinor = nodeRow + nodeColumn;
+      var currentMinor = currentCompRow + currentCompColumn;
+      // debugger;
+      if ( (nodeRow === currentCompRow && nodeColumn === currentCompColumn) || currentCompRow === nodeRow || currentCompColumn === nodeColumn || currentMajor === nodeMajor || currentMinor === nodeMinor ) {
+        node.edges.push(currentComparison);
+      } else {
+        node.safeEdges.push(currentComparison);
+      }
+    };
+  });
+
+  /* Every possible board */
+  var allAnswers = [];
+
+
+  var recursiveTraversal = function(node, placedPositions, invalidEdges) {
+      var correctBoardAtThisNode = placedPositions.slice();
+      var allInvalidEdges = {};
+      for (var key in invalidEdges) {
+        allInvalidEdges[key] = invalidEdges[key];
+      }
+      /* Base Case */
+      var keyOfLastPosition = correctBoardAtThisNode.length - 1 >= 0 ? correctBoardAtThisNode.length - 1 : undefined;
+      var lastPositionPlaced = false;
+      if (keyOfLastPosition !== undefined) {
+         lastPositionPlaced = correctBoardAtThisNode[keyOfLastPosition].position;
+      }
+      
+
+      if (correctBoardAtThisNode.length === n) {
+        var matchingMax = 0;
+        var matchingPositions = 0;
+        for (var u = 0; u < allAnswers.length; u++) {
+          var aSingleAnswerFromAllAnswers = allAnswers[u];
+          for (var m = 0; m < n; m++) {
+            for (var p = 0; p < n; p++) {
+              if (JSON.stringify(correctBoardAtThisNode[p].position) === JSON.stringify(aSingleAnswerFromAllAnswers[m].position)) {
+                // debugger;
+                matchingPositions++;
+              }
+            }
+          }
+          matchingMax = matchingPositions > matchingMax ? matchingPositions : matchingMax;
+          matchingPositions = 0;
+        }
+        if (matchingMax < correctBoardAtThisNode.length) {
+          // debugger;
+          allAnswers.push(correctBoardAtThisNode);
+          return;
+          // recursiveTraversal(queensGraph.nodes[i], [], {});
+        }
+
+        // correctBoardAtThisNode = [];
+      } else if (JSON.stringify(node.position) === JSON.stringify(lastPositionPlaced)){
+        return false;
+      } else {
+        correctBoardAtThisNode.push(node);
+        allInvalidEdges[JSON.stringify(node.position)] = "invalid";
+        /* If no where to go */
+        var placeToGo = false;
+          for (var k = 0; k < node.safeEdges.length; k++) {
+            if (allInvalidEdges[JSON.stringify(node.safeEdges[k].position)] !== "invalid") {
+              placeToGo = true;
+            }
+          };
+
+          if (placeToGo == false) {
+            recursiveTraversal(node, correctBoardAtThisNode, allInvalidEdges);
+          } else {
+            node.edges.forEach(function(edge) {
+              if (allInvalidEdges.hasOwnProperty(JSON.stringify(edge.position))) {
+                /* Don't add */
+              } else {
+                allInvalidEdges[JSON.stringify(edge.position)] = "invalid";
+              }
+            })
+          
+
+            node.safeEdges.forEach(function(safeEdge) {
+              var isSafe = false;
+        
+              if (allInvalidEdges[JSON.stringify(safeEdge.position)] !== "invalid") {
+                isSafe = true;
+              }
+              
+              // debugger;
+              if (isSafe) {
+                /* Recurse */
+                recursiveTraversal(safeEdge, correctBoardAtThisNode, allInvalidEdges);
+                
+              }
+              
+            });
+
+          }
+
+        }
+      
+    }
+
+  /* Iteration Traversal */
+  for (var i = 0; i < queensGraph.nodes.length; i++) {
+    recursiveTraversal(queensGraph.nodes[i], [], {});
+  };
+
+  /* Build a board from all answers */
+  var formattedAnswers = [];
+  for (var ty = 0; ty < allAnswers.length; ty++) {
+    var formattedAnswer = [];
+    var oneAnswer = allAnswers[ty];
+    for (var oi = 0; oi < oneAnswer.length; oi++) {
+      formattedAnswer.push(JSON.stringify(oneAnswer[oi].position));
+    };
+    formattedAnswers.push(formattedAnswer);
+  };
+
+  console.log(formattedAnswers);
+  // console.log('Single solution for ' + n + ' rooks:', JSON.stringify(solution));
+  // return solution;
 };
 
 
@@ -144,23 +320,10 @@ var Node = function(position) {
   this.edges = [];
   this.safeEdges = [];
 
-  this.setEdges = function(passedEdges) {
-    var indexToSplice;
-    var that = this;
-    var copyOfPassedEdges = passedEdges.slice();
-    copyOfPassedEdges.forEach(function(copiedEdge, indexOfCopy) {
-        if (JSON.stringify(copiedEdge.position) === JSON.stringify(that.position)) {
-          indexToSplice = indexOfCopy;
-        }
-    });
-    copyOfPassedEdges.splice(indexToSplice, 1);
-    this.edges.concat(copyOfPassedEdges);
-  };
 };
 
 var Graph = function() {
   this.nodes = [];
-  this.size = 0;
   this.add = function(position) {
     var node = new Node(position);
     this.nodes.push(node);
@@ -169,7 +332,8 @@ var Graph = function() {
 };
 
 function testingFunction() {
-  findNRooksSolution(3);
+  // findNRooksSolution(4);
+  findNQueensSolution(7);
 }
 
 testingFunction();
